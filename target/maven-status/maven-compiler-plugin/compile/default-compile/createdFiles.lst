@@ -1,0 +1,3 @@
+com/example/library/LibraryApplication.class
+com/example/library/model/Book.class
+com/example/library/repository/BookRepository.class

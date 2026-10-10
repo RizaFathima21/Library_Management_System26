@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library Management System</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #121212; color: #e0e0e0; padding: 20px; }
+        .container { max-width: 950px; margin: 0 auto; }
+        h1 { text-align: center; margin-bottom: 20px; color: #ffffff; }
+
+        .summary-cards { display: flex; gap: 15px; margin-bottom: 25px; }
+        .card { flex: 1; padding: 20px; border-radius: 8px; background: #1e1e1e; border: 1px solid #2d2d2d; box-shadow: 0 4px 6px rgba(0,0,0,0.3); text-align: center; }
+        .card h3 { font-size: 13px; text-transform: uppercase; color: #a0a0a0; margin-bottom: 5px; }
+        .card p { font-size: 24px; font-weight: bold; }
+        .stat-total { color: #00bcd4; }
+        .stat-available { color: #2ecc71; }
+        .stat-borrowed { color: #ff9800; }
+
+        .form-section, .list-section { background: #1e1e1e; border: 1px solid #2d2d2d; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); margin-bottom: 20px; }
+        .form-group { display: flex; gap: 10px; flex-wrap: wrap; }
+        input, button { padding: 10px; border: 1px solid #333; border-radius: 5px; font-size: 14px; background-color: #2a2a2a; color: #ffffff; }
+        input:focus { outline: none; border-color: #00bcd4; }
+        input[type="text"] { flex: 1; min-width: 150px; }
+        button { background-color: #00bcd4; color: #121212; font-weight: bold; border: none; cursor: pointer; transition: 0.2s; }
+        button:hover { background-color: #008ba3; color: #ffffff; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #2d2d2d; }
+        th { background-color: #252525; color: #b0b0b0; }
+        
+        .action-btn { padding: 5px 10px; font-size: 12px; margin-right: 5px; border-radius: 4px; }
+        .btn-borrow { background-color: #2ecc71; color: #121212; }
+        .btn-return { background-color: #ff9800; color: #121212; }
+        .btn-delete { background-color: #ff5252; color: #fff; }
+
+        .badge { padding: 3px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; }
+        .badge-available { background-color: rgba(46, 204, 113, 0.2); color: #2ecc71; }
+        .badge-borrowed { background-color: rgba(255, 152, 0, 0.2); color: #ff9800; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Library Management System</h1>
+
+        <div class="summary-cards">
+            <div class="card"><h3>Total Books</h3><p id="statTotal" class="stat-total">0</p></div>
+            <div class="card"><h3>Available</h3><p id="statAvailable" class="stat-available">0</p></div>
+            <div class="card"><h3>Borrowed</h3><p id="statBorrowed" class="stat-borrowed">0</p></div>
+        </div>
+
+        <div class="form-section">
+            <h3 style="margin-bottom: 15px;">Add New Book</h3>
+            <form id="addBookForm">
+                <div class="form-group">
+                    <input type="text" id="title" placeholder="Book Title" required>
+                    <input type="text" id="author" placeholder="Author Name" required>
+                    <input type="text" id="isbn" placeholder="ISBN Number" required>
+                    <button type="submit">Add Book</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="list-section">
+            <h3>Book Catalog</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Author</th>
+                        <th>ISBN</th>
+                        <th>Status</th>
+                        <th>Borrowed By</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="booksTable">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/api/books';
+
+        async function fetchSummary() {
+            const res = await fetch(`${API_URL}/summary`);
+            const data = await res.json();
+            document.getElementById('statTotal').innerText = data.total;
+            document.getElementById('statAvailable').innerText = data.available;
+            document.getElementById('statBorrowed').innerText = data.borrowed;
+        }
+
+        async function fetchBooks() {
+            const res = await fetch(API_URL);
+            const books = await res.json();
+
+            const tbody = document.getElementById('booksTable');
+            tbody.innerHTML = '';
+
+            books.forEach(book => {
+                const row = document.createElement('tr');
+                const statusBadge = book.borrowed 
+                    ? `<span class="badge badge-borrowed">Borrowed</span>` 
+                    : `<span class="badge badge-available">Available</span>`;
+
+                const actionButtons = book.borrowed
+                    ? `<button class="action-btn btn-return" onclick="returnBook(${book.id})">Return</button>`
+                    : `<button class="action-btn btn-borrow" onclick="borrowBook(${book.id})">Borrow</button>`;
+
+                row.innerHTML = `
+                    <td>${book.title}</td>
+                    <td>${book.author}</td>
+                    <td>${book.isbn}</td>
+                    <td>${statusBadge}</td>
+                    <td>${book.borrowedBy || '-'}</td>
+                    <td>
+                        ${actionButtons}
+                        <button class="action-btn btn-delete" onclick="deleteBook(${book.id})">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            fetchSummary();
+        }
+
+        document.getElementById('addBookForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const book = {
+                title: document.getElementById('title').value,
+                author: document.getElementById('author').value,
+                isbn: document.getElementById('isbn').value
+            };
+
+            await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(book)
+            });
+
+            document.getElementById('addBookForm').reset();
+            fetchBooks();
+        });
+
+        async function borrowBook(id) {
+            const memberName = prompt("Enter Borrower Name:");
+            if (!memberName) return;
+
+            await fetch(`${API_URL}/${id}/borrow?memberName=${encodeURIComponent(memberName)}`, {
+                method: 'PUT'
+            });
+            fetchBooks();
+        }
+
+        async function returnBook(id) {
+            await fetch(`${API_URL}/${id}/return`, { method: 'PUT' });
+            fetchBooks();
+        }
+
+        async function deleteBook(id) {
+            if (confirm("Are you sure you want to delete this book?")) {
+                await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+                fetchBooks();
+            }
+        }
+
+        fetchBooks();
+    </script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+/home/student/riza_repos/Library_Management_System26/src/main/java/com/example/library/dto/BookRequest.java
+/home/student/riza_repos/Library_Management_System26/src/main/java/com/example/library/exception/GlobalExceptionHandler.java
+/home/student/riza_repos/Library_Management_System26/src/main/java/com/example/library/exception/BookNotFoundException.java
+/home/student/riza_repos/Library_Management_System26/src/main/java/com/example/library/model/Book.java
+/home/student/riza_repos/Library_Management_System26/src/main/java/com/example/library/repository/BookRepository.java
+/home/student/riza_repos/Library_Management_System26/src/main/java/com/example/library/SpringApplication.java
+/home/student/riza_repos/Library_Management_System26/src/main/java/com/example/library/LibraryApplication.java
+/home/student/riza_repos/Library_Management_System26/src/main/java/com/example/library/controller/BookController.java
